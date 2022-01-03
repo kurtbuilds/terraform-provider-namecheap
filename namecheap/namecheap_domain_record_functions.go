@@ -251,16 +251,6 @@ func createRecordsMerge(domain string, emailType *string, records []interface{},
 		}
 		recordHash := hashRecord(*record.HostName, *record.RecordType, *fixedAddress)
 
-		if newRecordsMap[recordHash] != nil {
-			return diag.Diagnostics{
-				diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  "Duplicate record",
-					Detail:   fmt.Sprintf("Record %s is already exist!", stringifyNCRecord(&record)),
-				},
-			}
-		}
-
 		newRecord := record
 		newRecordsMap[recordHash] = &newRecord
 	}
