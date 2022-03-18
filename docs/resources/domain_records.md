@@ -15,7 +15,6 @@ each argument and usage examples.
 ```terraform
 resource "namecheap_domain_records" "my-domain-com" {
   domain = "my-domain.com"
-  mode = "OVERWRITE"
   email_type = "NONE"
 
   record {
@@ -33,7 +32,7 @@ resource "namecheap_domain_records" "my-domain-com" {
 
 resource "namecheap_domain_records" "my-domain2-com" {
   domain = "my-domain2.com"
-  mode = "OVERWRITE"
+  mode = "OVERWRITE" // Warning: this will remove all manually set records
 
   nameservers = [
     "ns1.some-domain.com",
@@ -45,7 +44,7 @@ resource "namecheap_domain_records" "my-domain2-com" {
 ## Argument Reference
 
 - `domain` - (Required) Purchased available domain name on your account
-- `mode` - (Optional) Possible values: `MERGE` (default), `OVERWRITE`
+- `mode` - (Optional) Possible values: `MERGE` (default), `OVERWRITE` - removes all manually set records & sets only ones that were specified in TF config
 - `email_type` - (Optional) Possible values: NONE, FWD, MXE, MX, OX, GMAIL. Conflicts with `nameservers`
 - `record` - (Optional) (see [below for nested schema](#nestedblock--record)) Might contain one or more `record`
   records. Conflicts with `nameservers`
@@ -62,3 +61,11 @@ resource "namecheap_domain_records" "my-domain2-com" {
 - `ttl` - (Optional) Time to live for all record types. Possible values: any value between 60 to 60000
 
 ~> It is strongly recommended to set `address`, `hostname`, `nameservers` in lower case to prevent undefined behavior!  
+
+## Import
+
+Domain records can be imported using by domain name, e.g.,
+
+```terraform
+terraform import namecheap_domain_records.main example.com
+```

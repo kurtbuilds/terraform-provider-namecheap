@@ -3,16 +3,18 @@ package namecheap_provider
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/namecheap/go-namecheap-sdk/v2/namecheap"
-	"strings"
 )
 
 const (
 	ncModeMerge     = "MERGE"
 	ncModeOverwrite = "OVERWRITE"
+	ncModeImport    = "IMPORT"
 )
 
 func resourceNamecheapDomainRecords() *schema.Resource {
@@ -23,7 +25,16 @@ func resourceNamecheapDomainRecords() *schema.Resource {
 		DeleteContext: resourceRecordDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, data *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				if err := data.Set("domain", data.Id()); err != nil {
+					return nil, err
+				}
+				if err := data.Set("mode", ncModeImport); err != nil {
+					return nil, err
+				}
+
+				return []*schema.ResourceData{data}, nil
+			},
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -204,7 +215,7 @@ func resourceRecordRead(ctx context.Context, data *schema.ResourceData, meta int
 			_ = data.Set("nameservers", *realNameservers)
 		}
 
-		if mode == ncModeOverwrite {
+		if mode == ncModeOverwrite || mode == ncModeImport {
 			realNameservers, diags := readNameserversOverwrite(domain, client)
 			if diags.HasError() {
 				return diags
@@ -226,7 +237,7 @@ func resourceRecordRead(ctx context.Context, data *schema.ResourceData, meta int
 			}
 		}
 
-		if mode == ncModeOverwrite {
+		if mode == ncModeOverwrite || mode == ncModeImport {
 			realRecords, realEmailType, diags := readRecordsOverwrite(domain, records, client)
 			if diags.HasError() {
 				return diags
@@ -240,7 +251,9 @@ func resourceRecordRead(ctx context.Context, data *schema.ResourceData, meta int
 		if nameservers != nil {
 			_ = data.Set("nameservers", []string{})
 		}
-
+		if mode == ncModeImport {
+			_ = data.Set("mode", ncModeMerge)
+		}
 	}
 
 	return nil
