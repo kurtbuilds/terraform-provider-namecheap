@@ -1,6 +1,6 @@
 NAME=namecheap
 BINARY=terraform-provider-${NAME}
-VERSION=2.0.0
+VERSION=2.1.1
 OS_ARCH=darwin_amd64
 
 format:
@@ -34,6 +34,10 @@ release:
 	GOOS=solaris GOARCH=amd64 go build -o ./bin/${BINARY}_${VERSION}_solaris_amd64
 	GOOS=windows GOARCH=386 go build -o ./bin/${BINARY}_${VERSION}_windows_386
 	GOOS=windows GOARCH=amd64 go build -o ./bin/${BINARY}_${VERSION}_windows_amd64
+
+install_darwin_arm64: build
+	mkdir -p ~/.terraform.d/plugins/localhost/namecheap/${NAME}/${VERSION}/darwin_arm64
+	mv ${BINARY} ~/.terraform.d/plugins/localhost/namecheap/${NAME}/${VERSION}/darwin_arm64
 
 install_darwin_amd64: build
 	mkdir -p ~/.terraform.d/plugins/localhost/namecheap/${NAME}/${VERSION}/darwin_amd64
